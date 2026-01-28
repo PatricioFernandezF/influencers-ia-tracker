@@ -1,0 +1,64 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Influencer {
+  id          Int           @id @default(autoincrement())
+  name        String
+  description String?
+  imageUrl    String?
+  isActive    Boolean       @default(true)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  
+  socialNetworks SocialNetwork[]
+  ratings        Rating[]
+}
+
+model SocialNetwork {
+  id           Int         @id @default(autoincrement())
+  platform     Platform
+  accountName  String
+  url          String
+  description  String?
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  
+  influencerId Int
+  influencer   Influencer  @relation(fields: [influencerId], references: [id], onDelete: Cascade)
+  
+  posts        Post[]
+}
+
+model Post {
+  id              Int           @id @default(autoincrement())
+  title           String
+  url             String
+  description     String?
+  publishedAt     DateTime
+  createdAt       DateTime      @default(now())
+  
+  socialNetworkId Int
+  socialNetwork   SocialNetwork @relation(fields: [socialNetworkId], references: [id], onDelete: Cascade)
+}
+
+model Rating {
+  id           Int        @id @default(autoincrement())
+  score        Int
+  comment      String?
+  createdAt    DateTime   @default(now())
+  
+  influencerId Int
+  influencer   Influencer @relation(fields: [influencerId], references: [id], onDelete: Cascade)
+}
+
+enum Platform {
+  YOUTUBE
+  TWITTER
+  BLOG
+}

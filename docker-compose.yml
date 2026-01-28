@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  influencers-backend:
+    build:
+      dockerfile: Dockerfile.backend
+    container_name: influencers-ia-backend
+    ports:
+      - "4891:3001"
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - DATABASE_URL=postgresql://postgres:postgres123@influencers-db:5432/influencers
+    depends_on:
+      - influencers-db
+    restart: unless-stopped
+    networks:
+      - coolify
+
+  influencers-frontend:
+    build:
+      dockerfile: Dockerfile.frontend
+      args:
+        VITE_API_URL: http://localhost:4891
+    container_name: influencers-ia-frontend
+    ports:
+      - "4892:5174"
+    environment:
+      - NODE_ENV=production
+      - VITE_API_URL=http://localhost:4891
+    depends_on:
+      - influencers-backend
+    restart: unless-stopped
+    networks:
+      - coolify
+
+  influencers-db:
+    image: postgres:16-alpine
+    container_name: influencers-ia-db
+    ports:
+      - "4893:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres123
+      - POSTGRES_DB=influencers
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    networks:
+      - coolify
+
+volumes:
+  postgres_data:
+
+networks:
+  coolify:
+    external: true
+    name: coolify
