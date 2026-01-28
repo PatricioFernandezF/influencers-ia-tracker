@@ -68,65 +68,43 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen flex bg-gray-50 dark:bg-[#101522]">
-      {/* Sidebar */}
-      <aside className="w-64 border-r border-gray-200 dark:border-gray-800 bg-white dark:bg-[#101522] flex flex-col justify-between p-4 sticky top-0 h-screen">
-        <div className="flex flex-col gap-8">
-          <div className="flex items-center gap-3 px-2">
-            <div className="bg-[#2b5bee] rounded-lg p-1.5 text-white">
-              <span className="material-symbols-outlined text-2xl">monitoring</span>
-            </div>
-            <div>
-              <h1 className="text-lg font-bold leading-tight">PostTracker</h1>
-              <p className="text-gray-500 text-xs font-medium">Influencer Pro</p>
-            </div>
-          </div>
-          <nav className="flex flex-col gap-1">
-            <Link className="flex items-center gap-3 px-3 py-2 rounded-lg bg-[#2b5bee]/10 text-[#2b5bee] font-medium" to="/">
-              <span className="material-symbols-outlined">dashboard</span>
-              <span className="text-sm">Dashboard</span>
-            </Link>
-            <Link className="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 font-medium transition-colors" to="#">
-              <span className="material-symbols-outlined">analytics</span>
-              <span className="text-sm">Analytics</span>
-            </Link>
-            <Link className="flex items-center gap-3 px-3 py-2 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 font-medium transition-colors" to="#">
-              <span className="material-symbols-outlined">group</span>
-              <span className="text-sm">Creators</span>
-            </Link>
-          </nav>
-        </div>
-        <Link
-          to="/influencer/new"
-          className="w-full bg-[#2b5bee] hover:bg-[#1e40af] text-white text-sm font-bold py-2.5 rounded-lg transition-colors flex items-center justify-center gap-2"
-        >
-          <span className="material-symbols-outlined text-lg">add_circle</span>
-          Add Creator
-        </Link>
-      </aside>
-
-      {/* Main Content */}
-      <main className="flex-1 flex flex-col">
+    <main className="flex-1 flex flex-col bg-slate-50 dark:bg-[#101522]">
         {/* Top Bar */}
-        <header className="flex items-center justify-between border-b border-gray-200 dark:border-gray-800 px-8 py-4 bg-white/50 dark:bg-[#101522]/50 backdrop-blur-md sticky top-0 z-10">
+        <header className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 px-8 py-4 bg-white/50 dark:bg-[#101522]/50 backdrop-blur-md sticky top-0 z-10">
           <div className="flex items-center gap-6">
-            <h2 className="text-xl font-bold tracking-tight">Influencers</h2>
+            <h2 className="text-xl font-bold tracking-tight">Latest Posts</h2>
             <div className="relative w-72">
-              <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xl">search</span>
+              <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xl">search</span>
               <input
                 type="text"
-                placeholder="Search creators..."
+                placeholder="Search posts..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full bg-gray-100 dark:bg-gray-800 border-none rounded-lg pl-10 pr-4 py-2 text-sm focus:ring-2 focus:ring-[#2b5bee]/50 transition-all placeholder:text-gray-500"
+                className="w-full bg-slate-100 dark:bg-slate-800 border-none rounded-lg pl-10 pr-4 py-2 text-sm focus:ring-2 focus:ring-[#2b5bee]/50 transition-all placeholder:text-slate-500"
               />
+            </div>
+          </div>
+          <div className="flex items-center gap-4">
+            <button className="p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors relative">
+              <span className="material-symbols-outlined">notifications</span>
+              <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 border-2 border-white dark:border-[#101522] rounded-full"></span>
+            </button>
+            <div className="h-8 w-px bg-slate-200 dark:bg-slate-800 mx-2"></div>
+            <div className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity">
+              <div className="text-right">
+                <p className="text-sm font-semibold leading-none">Alex Rivers</p>
+                <p className="text-[10px] text-slate-500 font-medium mt-1 uppercase tracking-wider">Campaign Manager</p>
+              </div>
+              <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700 bg-cover bg-center border-2 border-[#2b5bee]/20"></div>
             </div>
           </div>
         </header>
 
-        {/* Filters */}
-        <div className="px-8 py-6 border-b border-gray-200 dark:border-gray-800">
-          <div className="flex gap-2">
+        {/* Dashboard Content */}
+        <div className="p-8 max-w-7xl mx-auto w-full">
+          {/* Platform Filters (Chips) */}
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex gap-2">
             <button
               onClick={() => setPlatformFilter('')}
               className={`flex h-9 items-center justify-center gap-2 rounded-full px-5 text-sm font-semibold transition-all ${
@@ -153,11 +131,49 @@ export default function Dashboard() {
                 {platformLabels[platform]}
               </button>
             ))}
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-slate-500 font-medium">Sort by:</span>
+              <button className="flex items-center gap-1 text-sm font-semibold bg-white dark:bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700">
+                Newest First
+                <span className="material-symbols-outlined text-sm">expand_more</span>
+              </button>
+            </div>
           </div>
-        </div>
 
-        {/* Content Grid */}
-        <div className="p-8 max-w-7xl mx-auto w-full">
+          {/* Stats Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+            <div className="bg-white dark:bg-slate-900/50 p-6 rounded-xl border border-slate-200 dark:border-slate-800 flex flex-col gap-1">
+              <div className="flex justify-between items-start">
+                <p className="text-slate-500 text-sm font-medium">Total Posts</p>
+                <span className="bg-green-500/10 text-green-500 text-xs font-bold px-2 py-0.5 rounded-full">+12.5%</span>
+              </div>
+              <p className="text-3xl font-bold tracking-tight">{influencers.length * 15}</p>
+              <p className="text-xs text-slate-400 mt-2">vs last month</p>
+            </div>
+            <div className="bg-white dark:bg-slate-900/50 p-6 rounded-xl border border-slate-200 dark:border-slate-800 flex flex-col gap-1">
+              <div className="flex justify-between items-start">
+                <p className="text-slate-500 text-sm font-medium">Avg. Engagement</p>
+                <span className="bg-green-500/10 text-green-500 text-xs font-bold px-2 py-0.5 rounded-full">+0.8%</span>
+              </div>
+              <p className="text-3xl font-bold tracking-tight">4.21%</p>
+              <p className="text-xs text-slate-400 mt-2">Global benchmark: 3.5%</p>
+            </div>
+            <div className="bg-white dark:bg-slate-900/50 p-6 rounded-xl border border-slate-200 dark:border-slate-800 flex flex-col gap-1">
+              <div className="flex justify-between items-start">
+                <p className="text-slate-500 text-sm font-medium">Active Creators</p>
+                <span className="text-slate-400 text-xs font-bold px-2 py-0.5 rounded-full">0%</span>
+              </div>
+              <p className="text-3xl font-bold tracking-tight">{influencers.filter(i => i.isActive).length}</p>
+              <div className="flex gap-2 mt-2">
+                <span className="w-2 h-2 rounded-full bg-red-500"></span>
+                <span className="w-2 h-2 rounded-full bg-blue-400"></span>
+                <span className="w-2 h-2 rounded-full bg-green-500"></span>
+              </div>
+            </div>
+          </div>
+
+          {/* Influencer Cards */}
           {loading ? (
             <div className="flex justify-center items-center h-64">
               <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#2b5bee]"></div>
@@ -175,27 +191,29 @@ export default function Dashboard() {
                 <Link
                   key={influencer.id}
                   to={`/influencer/${influencer.id}`}
-                  className="group bg-white dark:bg-[#1a1f37] border border-gray-200 dark:border-[#2d3548] rounded-xl overflow-hidden hover:shadow-xl hover:border-[#2b5bee]/50 transition-all duration-300"
+                  className="group bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-xl hover:border-[#2b5bee]/50"
                 >
                   <div className="p-5">
                     <div className="flex flex-col items-center text-center">
-                      <div className="w-24 h-24 rounded-full p-1 border-2 border-[#2b5bee]/30 mb-4">
-                        <div className="w-full h-full rounded-full bg-gradient-to-br from-[#2b5bee] to-blue-500 flex items-center justify-center text-2xl font-bold text-white overflow-hidden">
+                      <div className="size-24 rounded-full p-1 border-2 border-[#2b5bee]/30 mb-4">
+                        <div className="w-full h-full rounded-full bg-center bg-cover overflow-hidden">
                           {influencer.imageUrl ? (
                             <img src={influencer.imageUrl} alt={influencer.name} className="w-full h-full object-cover" />
                           ) : (
-                            influencer.name.charAt(0).toUpperCase()
+                            <div className="w-full h-full bg-gradient-to-br from-[#2b5bee] to-blue-500 flex items-center justify-center text-2xl font-bold text-white">
+                              {influencer.name.charAt(0).toUpperCase()}
+                            </div>
                           )}
                         </div>
                       </div>
-                      <h3 className="text-lg font-bold mb-1 group-hover:text-[#2b5bee] transition-colors">{influencer.name}</h3>
+                      <h3 className="text-lg font-bold mb-1">{influencer.name}</h3>
                       <div className="flex items-center gap-1 mb-3 text-amber-400">
                         {renderStars(influencer.averageRating)}
-                        <span className="text-gray-400 text-xs font-medium ml-1">{influencer.averageRating.toFixed(1)}</span>
+                        <span className="text-slate-400 text-xs font-medium ml-1">{influencer.averageRating.toFixed(1)}</span>
                       </div>
                       <div className="flex gap-2 mb-4">
                         {influencer.socialNetworks.map((sn) => (
-                          <div key={sn.id} className="w-7 h-7 rounded bg-gray-100 dark:bg-[#2d3548] flex items-center justify-center text-gray-600 dark:text-gray-300">
+                          <div key={sn.id} className="size-7 rounded bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300">
                             <span className={`material-symbols-outlined text-sm ${platformIcons[sn.platform].color}`}>
                               {platformIcons[sn.platform].icon}
                             </span>
@@ -203,17 +221,17 @@ export default function Dashboard() {
                         ))}
                       </div>
                       {!influencer.isActive && (
-                        <span className="px-2 py-1 text-xs bg-gray-200 dark:bg-gray-700 rounded-full">Inactive</span>
+                        <span className="px-2 py-1 text-xs bg-slate-200 dark:bg-slate-700 rounded-full">Inactive</span>
                       )}
                     </div>
                   </div>
                   {influencer.latestPost && (
-                    <div className="bg-gray-50 dark:bg-black/20 p-4 border-t border-gray-200 dark:border-[#2d3548]">
-                      <p className="text-[11px] uppercase tracking-wider font-bold text-gray-400 mb-2">Latest Post</p>
+                    <div className="bg-slate-50 dark:bg-black/20 p-4 border-t border-slate-200 dark:border-slate-800">
+                      <p className="text-[11px] uppercase tracking-wider font-bold text-slate-400 mb-2">Latest Post</p>
                       <p className="text-sm font-medium line-clamp-1 mb-1 group-hover:text-[#2b5bee] transition-colors">
                         {influencer.latestPost.title}
                       </p>
-                      <div className="flex items-center gap-1.5 text-xs text-gray-400">
+                      <div className="flex items-center gap-1.5 text-xs text-slate-400">
                         <span className="material-symbols-outlined text-xs">schedule</span>
                         <span>{formatDate(influencer.latestPost.publishedAt)}</span>
                       </div>
@@ -225,6 +243,5 @@ export default function Dashboard() {
           )}
         </div>
       </main>
-    </div>
   )
 }
