@@ -21,13 +21,13 @@ services:
     build:
       dockerfile: Dockerfile.frontend
       args:
-        VITE_API_URL: http://localhost:7899
+        VITE_API_URL: http://37.60.236.102:7899
     container_name: influencers-ia-frontend
     ports:
       - "1452:5174"
     environment:
       - NODE_ENV=production
-      - VITE_API_URL=http://localhost:7899
+      - VITE_API_URL=http://37.60.236.102:7899
     depends_on:
       - influencers-backend
     restart: unless-stopped
