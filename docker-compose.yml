@@ -3,6 +3,7 @@ version: '3.8'
 services:
   influencers-backend:
     build:
+      context: .
       dockerfile: Dockerfile.backend
     container_name: influencers-ia-backend
     ports:
@@ -19,15 +20,16 @@ services:
 
   influencers-frontend:
     build:
+      context: .
       dockerfile: Dockerfile.frontend
       args:
-        VITE_API_URL: http://37.60.236.102:7899
+        VITE_API_URL: https://kg408swo8wkk8g8k0oos44ow.37.60.236.102.sslip.io
     container_name: influencers-ia-frontend
     ports:
       - "1452:5174"
     environment:
       - NODE_ENV=production
-      - VITE_API_URL=http://37.60.236.102:7899
+      - VITE_API_URL=https://kg408swo8wkk8g8k0oos44ow.37.60.236.102.sslip.io
     depends_on:
       - influencers-backend
     restart: unless-stopped
