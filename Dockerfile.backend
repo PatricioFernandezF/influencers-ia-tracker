@@ -18,10 +18,15 @@ COPY server ./server
 COPY prisma ./prisma
 COPY tsconfig.json ./
 
+RUN apk add --no-cache netcat-openbsd
+
 RUN npx prisma generate
+
+COPY server/wait-for-db.sh /wait-for-db.sh
+RUN chmod +x /wait-for-db.sh
 
 EXPOSE 3001
 
 ENV PORT=3001
 
-CMD ["sh", "-c", "sleep 5 && npx prisma migrate deploy && npx tsx server/index.ts"]
+CMD ["/wait-for-db.sh", "influencers-db", "sh", "-c", "npx prisma db push && npx tsx server/index.ts"]
