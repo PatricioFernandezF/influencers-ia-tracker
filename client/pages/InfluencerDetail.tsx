@@ -27,10 +27,19 @@ export default function InfluencerDetail() {
   const [ratingScore, setRatingScore] = useState(5)
   const [ratingComment, setRatingComment] = useState('')
   const [newPost, setNewPost] = useState({ title: '', url: '', description: '', publishedAt: '' })
+  const [imageStatus, setImageStatus] = useState<'idle' | 'loading' | 'loaded' | 'error'>('idle')
 
   useEffect(() => {
     loadInfluencer()
   }, [id])
+
+  useEffect(() => {
+    if (influencer?.imageUrl) {
+      setImageStatus('loading')
+    } else {
+      setImageStatus('error')
+    }
+  }, [influencer?.imageUrl])
 
   const loadInfluencer = async () => {
     if (!id) return
@@ -143,34 +152,59 @@ export default function InfluencerDetail() {
           </div>
         </div>
 
-        <div className="bg-gray-800/50 backdrop-blur border border-gray-700 rounded-xl p-8 mb-6">
-          <div className="flex flex-col md:flex-row gap-6">
-            <div className="w-32 h-32 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center text-5xl font-bold overflow-hidden flex-shrink-0">
-              {influencer.imageUrl ? (
-                <img src={influencer.imageUrl} alt={influencer.name} className="w-full h-full object-cover" />
-              ) : (
-                influencer.name.charAt(0).toUpperCase()
-              )}
-            </div>
-            <div className="flex-1">
-              <div className="flex items-start justify-between">
-                <div>
-                  <h1 className="text-3xl font-bold mb-2">{influencer.name}</h1>
-                  <p className="text-gray-400 mb-4">{influencer.description || 'Sin descripción'}</p>
-                </div>
-                {!influencer.isActive && (
-                  <span className="px-3 py-1 bg-gray-700 rounded-lg text-sm">Inactivo</span>
+        <div className="mb-6 overflow-hidden rounded-3xl border border-slate-700 bg-gradient-to-br from-[#1f2937]/90 via-[#111827]/80 to-[#0f172a]/80 p-6 shadow-2xl shadow-black/40 backdrop-blur">
+          <div className="flex flex-col gap-6 lg:flex-row">
+            <div className="relative w-40 flex-shrink-0">
+              <div className="relative h-40 w-40 rounded-full bg-gradient-to-br from-[#2b5bee] to-[#7c3aed] shadow-xl overflow-hidden border-4 border-white/30 flex items-center justify-center">
+                {influencer.imageUrl && (
+                  <img
+                    src={influencer.imageUrl}
+                    alt={influencer.name}
+                    className={`absolute inset-0 h-full w-full object-cover transition-opacity ${
+                      imageStatus === 'loaded' ? 'opacity-100' : 'opacity-0'
+                    }`}
+                    onLoad={() => setImageStatus('loaded')}
+                    onError={() => setImageStatus('error')}
+                    loading="lazy"
+                  />
+                )}
+                {imageStatus === 'loading' && (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="h-10 w-10 animate-spin rounded-full border-4 border-white/40 border-t-white"></div>
+                  </div>
+                )}
+                {(imageStatus === 'error' || !influencer.imageUrl) && (
+                  <span className="text-4xl font-bold text-white">
+                    {influencer.name.charAt(0).toUpperCase()}
+                  </span>
                 )}
               </div>
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-1">
+            </div>
+            <div className="flex-1">
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                <div>
+                  <h1 className="text-4xl font-bold text-white">{influencer.name}</h1>
+                  <p className="mt-2 text-sm text-slate-300 lg:w-3/4">{influencer.description || 'Sin descripción'}</p>
+                </div>
+                {!influencer.isActive && (
+                  <span className="rounded-full border border-rose-500/60 bg-rose-500/10 px-4 py-1 text-sm font-semibold text-rose-300">
+                    Inactivo
+                  </span>
+                )}
+              </div>
+              <div className="mt-6 flex flex-wrap items-center gap-4">
+                <div className="flex items-center gap-2">
                   {renderStars(influencer.averageRating)}
-                  <span className="text-lg ml-2">{influencer.averageRating.toFixed(1)}</span>
-                  <span className="text-gray-500 text-sm">({influencer.ratings.length} valoraciones)</span>
+                  <div>
+                    <p className="text-lg font-semibold text-white">{influencer.averageRating.toFixed(1)}</p>
+                    <p className="text-xs uppercase tracking-widest text-slate-300">
+                      {influencer.ratings.length} valoraciones
+                    </p>
+                  </div>
                 </div>
                 <button
                   onClick={() => setShowRatingModal(true)}
-                  className="px-4 py-2 bg-yellow-500/20 text-yellow-400 rounded-lg hover:bg-yellow-500/30 transition-colors"
+                  className="rounded-full border border-yellow-400/60 bg-yellow-500/10 px-4 py-2 text-sm font-semibold text-yellow-300 transition hover:bg-yellow-500/20"
                 >
                   Valorar
                 </button>
@@ -183,30 +217,35 @@ export default function InfluencerDetail() {
           {influencer.socialNetworks.map((sn) => (
             <div
               key={sn.id}
-              className={`border rounded-xl p-6 ${platformColors[sn.platform]}`}
+              className={`group relative overflow-hidden rounded-2xl border border-slate-700/60 bg-slate-900/40 p-6 shadow-lg shadow-black/30 transition hover:-translate-y-0.5 ${platformColors[sn.platform]}`}
             >
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  {platformIcons[sn.platform]}
-                  <span className="font-semibold">{sn.platform}</span>
+              <div className="absolute inset-0 opacity-0 transition-opacity group-hover:opacity-20">
+                <div className="h-full w-full bg-gradient-to-br from-white to-transparent opacity-20"></div>
+              </div>
+              <div className="relative mb-4 flex items-center justify-between">
+                <div className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-white">
+                  <span className="text-white/80">{platformIcons[sn.platform]}</span>
+                  <span>{sn.platform}</span>
                 </div>
                 <a
                   href={sn.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                  className="relative z-10 rounded-full border border-white/30 bg-white/5 px-2 py-1 text-xs font-semibold uppercase tracking-widest text-white/70 transition hover:border-white hover:text-white"
                 >
-                  <ExternalLink className="w-4 h-4" />
+                  <ExternalLink className="w-3 h-3" />
                 </a>
               </div>
-              <p className="font-medium mb-1">{sn.accountName}</p>
-              {sn.description && <p className="text-sm opacity-80">{sn.description}</p>}
+              <p className="relative z-10 text-base font-semibold text-white">{sn.accountName}</p>
+              {sn.description && (
+                <p className="relative z-10 mt-2 text-sm text-slate-300 leading-relaxed">{sn.description}</p>
+              )}
               <button
                 onClick={() => {
                   setSelectedNetwork(sn)
                   setShowPostModal(true)
                 }}
-                className="mt-4 flex items-center gap-1 text-sm opacity-80 hover:opacity-100 transition-opacity"
+                className="relative z-10 mt-6 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-[#2b5bee] transition hover:text-white"
               >
                 <Plus className="w-4 h-4" />
                 Agregar post
@@ -221,25 +260,28 @@ export default function InfluencerDetail() {
             <p className="text-gray-400 text-center py-8">No hay posts registrados</p>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {influencer.socialNetworks.flatMap(sn => 
+              {influencer.socialNetworks.flatMap(sn =>
                 sn.posts.map(post => (
                   <a
                     key={post.id}
                     href={post.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="block p-4 bg-gray-700/50 rounded-lg hover:bg-gray-700 transition-colors"
+                    className="group relative flex flex-col overflow-hidden rounded-2xl border border-slate-700/60 bg-slate-900/40 p-4 transition hover:-translate-y-0.5 hover:border-[#2b5bee]"
                   >
-                    <div className="flex items-start justify-between mb-2">
-                      <h3 className="font-medium">{post.title}</h3>
-                      <span className={`p-1 rounded ${platformColors[sn.platform]}`}>
+                    <div className="flex items-start justify-between mb-3">
+                      <h3 className="text-base font-semibold text-white">{post.title}</h3>
+                      <span className="rounded-full border border-white/30 bg-white/5 p-1 text-xs text-white/70">
                         {platformIcons[sn.platform]}
                       </span>
                     </div>
                     {post.description && (
-                      <p className="text-sm text-gray-400 mb-2 line-clamp-2">{post.description}</p>
+                      <p className="text-sm text-slate-300 mb-3 line-clamp-2">{post.description}</p>
                     )}
-                    <p className="text-xs text-gray-500">{formatDate(post.publishedAt)}</p>
+                    <div className="mt-auto flex items-center gap-2 text-xs uppercase tracking-widest text-slate-400">
+                      <span className="material-symbols-outlined text-[12px] text-slate-400">schedule</span>
+                      <span>{formatDate(post.publishedAt)}</span>
+                    </div>
                   </a>
                 ))
               )}
