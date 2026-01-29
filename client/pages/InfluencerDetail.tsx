@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom'
 import { ArrowLeft, Edit, Trash2, Youtube, Twitter, FileText, Star, Plus, ExternalLink } from 'lucide-react'
 import { api } from '../api'
 import { Influencer, Platform, SocialNetwork } from '../types'
+import '../styles/detail-hero.css'
 
 const platformIcons: Record<Platform, JSX.Element> = {
   YOUTUBE: <Youtube className="w-5 h-5" />,
@@ -44,6 +45,7 @@ export default function InfluencerDetail() {
   const loadInfluencer = async () => {
     if (!id) return
     setLoading(true)
+    setImageStatus('idle')
     try {
       const data = await api.getInfluencer(parseInt(id))
       setInfluencer(data)
@@ -126,6 +128,11 @@ export default function InfluencerDetail() {
     )
   }
 
+  const totalPosts = influencer.socialNetworks.reduce((sum, sn) => sum + sn.posts.length, 0)
+  const uniquePlatforms = Array.from(
+    new Set<Platform>(influencer.socialNetworks.map((sn) => sn.platform))
+  )
+
   return (
     <div className="min-h-screen p-6">
       <div className="max-w-5xl mx-auto">
@@ -152,10 +159,10 @@ export default function InfluencerDetail() {
           </div>
         </div>
 
-        <div className="mb-6 overflow-hidden rounded-3xl border border-slate-700 bg-gradient-to-br from-[#1f2937]/90 via-[#111827]/80 to-[#0f172a]/80 p-6 shadow-2xl shadow-black/40 backdrop-blur">
-          <div className="flex flex-col gap-6 lg:flex-row">
-            <div className="relative w-40 flex-shrink-0">
-              <div className="relative h-40 w-40 rounded-full bg-gradient-to-br from-[#2b5bee] to-[#7c3aed] shadow-xl overflow-hidden border-4 border-white/30 flex items-center justify-center">
+        <section className="detail-hero mb-6">
+          <div className="detail-hero__grid">
+            <div className="detail-hero__avatar-shell">
+              <div className="detail-hero__avatar">
                 {influencer.imageUrl && (
                   <img
                     src={influencer.imageUrl}
@@ -168,50 +175,59 @@ export default function InfluencerDetail() {
                     loading="lazy"
                   />
                 )}
-                {imageStatus === 'loading' && (
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="h-10 w-10 animate-spin rounded-full border-4 border-white/40 border-t-white"></div>
-                  </div>
-                )}
+                {imageStatus === 'loading' && <span className="detail-hero__avatar-spinner"></span>}
                 {(imageStatus === 'error' || !influencer.imageUrl) && (
-                  <span className="text-4xl font-bold text-white">
+                  <span className="detail-hero__avatar-fallback">
                     {influencer.name.charAt(0).toUpperCase()}
                   </span>
                 )}
               </div>
             </div>
-            <div className="flex-1">
-              <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <div className="detail-hero__content">
+              <div className="detail-hero__header">
                 <div>
-                  <h1 className="text-4xl font-bold text-white">{influencer.name}</h1>
-                  <p className="mt-2 text-sm text-slate-300 lg:w-3/4">{influencer.description || 'Sin descripción'}</p>
+                  <h1 className="text-white">{influencer.name}</h1>
+                  <p className="detail-hero__description">{influencer.description || 'Sin descripción'}</p>
                 </div>
                 {!influencer.isActive && (
-                  <span className="rounded-full border border-rose-500/60 bg-rose-500/10 px-4 py-1 text-sm font-semibold text-rose-300">
-                    Inactivo
-                  </span>
+                  <span className="detail-hero__status">Inactivo</span>
                 )}
               </div>
-              <div className="mt-6 flex flex-wrap items-center gap-4">
-                <div className="flex items-center gap-2">
-                  {renderStars(influencer.averageRating)}
-                  <div>
-                    <p className="text-lg font-semibold text-white">{influencer.averageRating.toFixed(1)}</p>
-                    <p className="text-xs uppercase tracking-widest text-slate-300">
-                      {influencer.ratings.length} valoraciones
-                    </p>
-                  </div>
+              <div className="hero-chip-row">
+                {uniquePlatforms.map((platform) => (
+                  <span key={platform} className={`hero-chip ${platformColors[platform]}`}>
+                    {platform}
+                  </span>
+                ))}
+              </div>
+              <div className="hero-rating">
+                {renderStars(influencer.averageRating)}
+                <div>
+                  <p className="hero-rating__value">{influencer.averageRating.toFixed(1)}</p>
+                  <p className="hero-rating__caption">{influencer.ratings.length} valoraciones</p>
                 </div>
-                <button
-                  onClick={() => setShowRatingModal(true)}
-                  className="rounded-full border border-yellow-400/60 bg-yellow-500/10 px-4 py-2 text-sm font-semibold text-yellow-300 transition hover:bg-yellow-500/20"
-                >
-                  Valorar
-                </button>
+              </div>
+              <div className="hero-actions">
+                <button className="hero-button">Follow</button>
+                <button className="hero-button hero-button--ghost">Message</button>
+              </div>
+              <div className="hero-meta">
+                <div className="hero-stat">
+                  <span>Total posts</span>
+                  <strong>{totalPosts}</strong>
+                </div>
+                <div className="hero-stat">
+                  <span>Redes</span>
+                  <strong>{uniquePlatforms.length}</strong>
+                </div>
+                <div className="hero-stat">
+                  <span>Activo</span>
+                  <strong>{influencer.isActive ? 'Sí' : 'No'}</strong>
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        </section>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
           {influencer.socialNetworks.map((sn) => (
