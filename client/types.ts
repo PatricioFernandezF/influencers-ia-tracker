@@ -40,3 +40,39 @@ export interface Influencer {
   averageRating: number
   latestPost?: Post
 }
+
+export interface DashboardInsightPost {
+  id: number
+  title: string
+  description?: string
+  url: string
+  platform: Platform
+  influencerName: string
+  publishedAt: string
+  engagement: number
+  ratingAverage: number
+}
+
+export interface DashboardInsightMetric {
+  weeklyPosts: number
+  averageRating: number
+  growthPercent: number
+}
+
+export interface CreatorHighlight {
+  id: number
+  name: string
+  ratingAverage: number
+  networks: number
+  imageUrl?: string
+}
+
+export interface DashboardInsights {
+  trendingPosts: DashboardInsightPost[]
+  platformBreakdown: {
+    platform: Platform
+    count: number
+  }[]
+  metrics: DashboardInsightMetric
+  topCreators: CreatorHighlight[]
+}

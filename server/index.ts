@@ -62,6 +62,126 @@ app.get('/api/influencers', async (req, res) => {
   }
 });
 
+const PLATFORMS: Array<'YOUTUBE' | 'TWITTER' | 'BLOG'> = ['YOUTUBE', 'TWITTER', 'BLOG'];
+
+app.get('/api/dashboard-insights', async (req, res) => {
+  try {
+    const now = new Date();
+    const weekAgo = new Date(now);
+    weekAgo.setDate(weekAgo.getDate() - 7);
+    const twoWeeksAgo = new Date(now);
+    twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
+
+    const posts = await prisma.post.findMany({
+      orderBy: { publishedAt: 'desc' },
+      include: {
+        socialNetwork: {
+          include: {
+            influencer: {
+              include: {
+                ratings: true
+              }
+            }
+          }
+        }
+      }
+    });
+
+    const postsThisWeek = posts.filter((post) => post.publishedAt >= weekAgo);
+    const postsPrevWeek = posts.filter(
+      (post) => post.publishedAt >= twoWeeksAgo && post.publishedAt < weekAgo
+    );
+
+    const weeklyPosts = postsThisWeek.length;
+    const prevPosts = postsPrevWeek.length;
+    const growthPercent = prevPosts === 0 ? (weeklyPosts === 0 ? 0 : 100) : ((weeklyPosts - prevPosts) / prevPosts) * 100;
+
+    const platformBreakdown = PLATFORMS.map((platform) => ({
+      platform,
+      count: postsThisWeek.filter((post) => post.socialNetwork.platform === platform).length
+    }));
+
+    const trendingPosts = PLATFORMS.map((platform) => {
+      const candidates = postsThisWeek.filter((post) => post.socialNetwork.platform === platform);
+      if (!candidates.length) return null;
+
+      const scored = candidates
+        .map((post) => {
+          const influencer = post.socialNetwork.influencer;
+          const ratingCount = influencer.ratings.length;
+          const ratingAverage = ratingCount
+            ? influencer.ratings.reduce((sum, rating) => sum + rating.score, 0) / ratingCount
+            : 0;
+          const daysSince = Math.min(7, (now.getTime() - post.publishedAt.getTime()) / (1000 * 60 * 60 * 24));
+          const recency = Math.max(0, 1 - daysSince / 7);
+          const engagement = ratingAverage * 20 + recency * 10;
+
+          return {
+            post,
+            score: engagement,
+            ratingAverage
+          };
+        })
+        .sort((a, b) => b.score - a.score);
+
+      const top = scored[0];
+      return {
+        id: top.post.id,
+        title: top.post.title,
+        description: top.post.description,
+        url: top.post.url,
+        platform,
+        influencerName: top.post.socialNetwork.influencer.name,
+        publishedAt: top.post.publishedAt.toISOString(),
+        engagement: top.score,
+        ratingAverage: top.ratingAverage
+      };
+    }).filter(Boolean);
+
+    const influencers = await prisma.influencer.findMany({
+      include: {
+        ratings: true,
+        socialNetworks: true
+      }
+    });
+
+    let ratingTotal = 0;
+    let ratingCount = 0;
+    const topCreators = influencers
+      .map((influencer) => {
+        const sum = influencer.ratings.reduce((acc, rating) => acc + rating.score, 0);
+        const average = influencer.ratings.length ? sum / influencer.ratings.length : 0;
+        ratingTotal += sum;
+        ratingCount += influencer.ratings.length;
+        return {
+          id: influencer.id,
+          name: influencer.name,
+          ratingAverage: average,
+          networks: influencer.socialNetworks.length,
+          imageUrl: influencer.imageUrl
+        };
+      })
+      .sort((a, b) => b.ratingAverage - a.ratingAverage)
+      .slice(0, 3);
+
+    const averageRating = ratingCount ? ratingTotal / ratingCount : 0;
+
+    res.json({
+      trendingPosts,
+      platformBreakdown,
+      metrics: {
+        weeklyPosts,
+        averageRating,
+        growthPercent: parseFloat(growthPercent.toFixed(1))
+      },
+      topCreators
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Error building dashboard insights' });
+  }
+});
+
 // GET single influencer
 app.get('/api/influencers/:id', async (req, res) => {
   try {

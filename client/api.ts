@@ -87,5 +87,10 @@ export const api = {
       body: JSON.stringify(data)
     })
     return res.json()
+  },
+
+  async getDashboardInsights() {
+    const res = await fetch(`${API_URL}/api/dashboard-insights`)
+    return res.json()
   }
 }

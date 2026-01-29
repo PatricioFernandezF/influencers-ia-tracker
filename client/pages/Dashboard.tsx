@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { api } from '../api'
-import { Influencer, Platform } from '../types'
+import { DashboardInsights, Influencer, Platform } from '../types'
 
 const platformIcons: Record<Platform, { icon: string; color: string }> = {
   YOUTUBE: { icon: 'play_circle', color: 'text-red-500' },
@@ -20,6 +20,9 @@ export default function Dashboard() {
   const [search, setSearch] = useState('')
   const [platformFilter, setPlatformFilter] = useState<Platform | ''>('')
   const [loading, setLoading] = useState(true)
+  const [insights, setInsights] = useState<DashboardInsights | null>(null)
+  const [insightsLoading, setInsightsLoading] = useState(true)
+  const [insightsError, setInsightsError] = useState<string | null>(null)
 
   useEffect(() => {
     loadInfluencers()
@@ -32,6 +35,10 @@ export default function Dashboard() {
     return () => clearTimeout(timer)
   }, [search])
 
+  useEffect(() => {
+    loadInsights()
+  }, [])
+
   const loadInfluencers = async () => {
     setLoading(true)
     try {
@@ -41,6 +48,19 @@ export default function Dashboard() {
       console.error('Error loading influencers:', error)
     }
     setLoading(false)
+  }
+
+  const loadInsights = async () => {
+    setInsightsLoading(true)
+    setInsightsError(null)
+    try {
+      const data = await api.getDashboardInsights()
+      setInsights(data)
+    } catch (error) {
+      console.error('Error loading insights:', error)
+      setInsightsError('No se pudieron cargar los insights recientes.')
+    }
+    setInsightsLoading(false)
   }
 
   const renderStars = (rating: number) => {
@@ -66,6 +86,8 @@ export default function Dashboard() {
     if (days < 7) return `Hace ${days} días`
     return date.toLocaleDateString('es-ES')
   }
+
+  const formatPercent = (value: number) => `${value >= 0 ? '+' : ''}${value.toFixed(1)}%`
 
   return (
     <main className="flex-1 flex flex-col bg-slate-50 dark:bg-[#101522]">
@@ -102,6 +124,111 @@ export default function Dashboard() {
 
         {/* Dashboard Content */}
         <div className="p-8 max-w-7xl mx-auto w-full">
+          <section className="mb-10 rounded-2xl border border-slate-200 bg-white/70 p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900/60">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-xs uppercase tracking-widest text-slate-500">Insights</p>
+                <h3 className="text-2xl font-semibold text-slate-900 dark:text-white">Posts trending & métricas</h3>
+                <p className="text-sm text-slate-500">
+                  Resumen semanal por red social y acceso rápido para agregar nuevos creadores.
+                </p>
+              </div>
+              <Link
+                to="/influencer/new"
+                className="inline-flex items-center gap-2 rounded-full bg-[#2b5bee] px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-[#2b5bee]/30 transition hover:bg-[#1e40af]"
+              >
+                <span className="material-symbols-outlined text-lg">add</span>
+                Agregar nuevo creador
+              </Link>
+            </div>
+            <div className="mt-6 grid gap-6 lg:grid-cols-[1.5fr,1fr]">
+              <div className="grid gap-4 sm:grid-cols-2">
+                {insightsLoading ? (
+                  Array.from({ length: 2 }).map((_, index) => (
+                    <div
+                      key={index}
+                      className="h-40 animate-pulse rounded-xl bg-slate-100/80 dark:bg-slate-800"
+                    />
+                  ))
+                ) : insights?.trendingPosts?.length ? (
+                  insights.trendingPosts.map((post) => (
+                    <article
+                      key={post.id}
+                      className="flex flex-col justify-between rounded-xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-900/60"
+                    >
+                      <div className="flex items-center justify-between text-xs uppercase tracking-wider text-slate-500">
+                        <span>{platformLabels[post.platform]}</span>
+                        <span className="text-slate-400">{Math.round(post.engagement)} pts</span>
+                      </div>
+                      <h4 className="mt-4 text-lg font-semibold text-slate-900 dark:text-white">{post.title}</h4>
+                      <p className="text-sm text-slate-500">{post.influencerName}</p>
+                      <div className="mt-4 flex items-center justify-between text-xs text-slate-400">
+                        <span>{formatDate(post.publishedAt)}</span>
+                        <span>{post.ratingAverage.toFixed(1)}⭐</span>
+                      </div>
+                    </article>
+                  ))
+                ) : (
+                  <p className="text-sm text-slate-500">Sin posts activos para mostrar esta semana.</p>
+                )}
+                {insights && (
+                  <div className="flex flex-wrap gap-2 text-xs text-slate-500">
+                    {insights.platformBreakdown.map((item) => (
+                    <span
+                      key={item.platform}
+                        className="rounded-full border border-slate-200 bg-white/80 px-3 py-1 dark:border-slate-700 dark:bg-slate-800"
+                      >
+                        {platformLabels[item.platform]} · {item.count}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <div className="space-y-4">
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="rounded-2xl border border-slate-200 bg-white/80 p-3 text-center dark:border-slate-800 dark:bg-slate-950">
+                    <p className="text-xs uppercase tracking-widest text-slate-500">Posts semana</p>
+                    <p className="text-2xl font-semibold text-slate-900 dark:text-white">
+                      {insights?.metrics.weeklyPosts ?? 0}
+                    </p>
+                  </div>
+                  <div className="rounded-2xl border border-slate-200 bg-white/80 p-3 text-center dark:border-slate-800 dark:bg-slate-950">
+                    <p className="text-xs uppercase tracking-widest text-slate-500">Rating</p>
+                    <p className="text-2xl font-semibold text-slate-900 dark:text-white">
+                      {(insights?.metrics.averageRating ?? 0).toFixed(1)}
+                    </p>
+                  </div>
+                  <div className="rounded-2xl border border-slate-200 bg-white/80 p-3 text-center dark:border-slate-800 dark:bg-slate-950">
+                    <p className="text-xs uppercase tracking-widest text-slate-500">Crecimiento</p>
+                    <p className="text-2xl font-semibold text-emerald-500">
+                      {formatPercent(insights?.metrics.growthPercent ?? 0)}
+                    </p>
+                  </div>
+                </div>
+                <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4 dark:border-slate-800 dark:bg-slate-900">
+                  <p className="text-xs uppercase tracking-widest text-slate-500">Creadoras destacadas</p>
+                  <div className="mt-3 space-y-3">
+                    {insights?.topCreators?.length ? (
+                      insights.topCreators.map((creator) => (
+                        <div key={creator.id} className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm font-semibold text-slate-900 dark:text-white">{creator.name}</p>
+                            <p className="text-xs text-slate-500">
+                              {creator.ratingAverage.toFixed(1)}⭐ · {creator.networks} redes
+                            </p>
+                          </div>
+                          <span className="text-xs text-slate-400">Top</span>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-sm text-slate-500">Aún no hay creadores destacados.</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+            {insightsError && <p className="mt-4 text-xs text-rose-500">{insightsError}</p>}
+          </section>
           {/* Platform Filters (Chips) */}
           <div className="flex items-center justify-between mb-8">
             <div className="flex gap-2">
@@ -146,23 +273,37 @@ export default function Dashboard() {
             <div className="bg-white dark:bg-slate-900/50 p-6 rounded-xl border border-slate-200 dark:border-slate-800 flex flex-col gap-1">
               <div className="flex justify-between items-start">
                 <p className="text-slate-500 text-sm font-medium">Total Posts</p>
-                <span className="bg-green-500/10 text-green-500 text-xs font-bold px-2 py-0.5 rounded-full">+12.5%</span>
+                <span
+                  className={`text-xs font-bold px-2 py-0.5 rounded-full ${
+                    (insights?.metrics.growthPercent ?? 0) >= 0
+                      ? 'bg-emerald-500/10 text-emerald-500'
+                      : 'bg-rose-500/10 text-rose-500'
+                  }`}
+                >
+                  {formatPercent(insights?.metrics.growthPercent ?? 0)}
+                </span>
               </div>
-              <p className="text-3xl font-bold tracking-tight">{influencers.length * 15}</p>
-              <p className="text-xs text-slate-400 mt-2">vs last month</p>
+              <p className="text-3xl font-bold tracking-tight">
+                {insights?.metrics.weeklyPosts ?? influencers.length * 15}
+              </p>
+              <p className="text-xs text-slate-400 mt-2">últimos 7 días</p>
             </div>
             <div className="bg-white dark:bg-slate-900/50 p-6 rounded-xl border border-slate-200 dark:border-slate-800 flex flex-col gap-1">
               <div className="flex justify-between items-start">
-                <p className="text-slate-500 text-sm font-medium">Avg. Engagement</p>
-                <span className="bg-green-500/10 text-green-500 text-xs font-bold px-2 py-0.5 rounded-full">+0.8%</span>
+                <p className="text-slate-500 text-sm font-medium">Avg. Rating</p>
+                <span className="bg-blue-500/10 text-blue-500 text-xs font-bold px-2 py-0.5 rounded-full">
+                  sobre 5
+                </span>
               </div>
-              <p className="text-3xl font-bold tracking-tight">4.21%</p>
-              <p className="text-xs text-slate-400 mt-2">Global benchmark: 3.5%</p>
+              <p className="text-3xl font-bold tracking-tight">
+                {(insights?.metrics.averageRating ?? 0).toFixed(2)}
+              </p>
+              <p className="text-xs text-slate-400 mt-2">valoración global</p>
             </div>
             <div className="bg-white dark:bg-slate-900/50 p-6 rounded-xl border border-slate-200 dark:border-slate-800 flex flex-col gap-1">
               <div className="flex justify-between items-start">
                 <p className="text-slate-500 text-sm font-medium">Active Creators</p>
-                <span className="text-slate-400 text-xs font-bold px-2 py-0.5 rounded-full">0%</span>
+                <span className="text-slate-400 text-xs font-bold px-2 py-0.5 rounded-full">Live</span>
               </div>
               <p className="text-3xl font-bold tracking-tight">{influencers.filter(i => i.isActive).length}</p>
               <div className="flex gap-2 mt-2">
