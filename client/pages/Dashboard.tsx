@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { api } from '../api'
 import { DashboardInsights, Influencer, Platform } from '../types'
@@ -15,11 +15,26 @@ const platformLabels: Record<Platform, string> = {
   BLOG: 'Blog'
 }
 
+const notificationsSeed = [
+  { id: '1', title: 'Nuevo rating publicado', body: 'AI Expert Test recibió una valoración de 5 estrellas.' },
+  { id: '2', title: 'Post trending en Twitter', body: 'Xavier Mitjana compartió una guía sobre modelos conversacionales.' },
+  { id: '3', title: 'Recordatorio', body: 'Revisa los posts pendientes de validación antes del viernes.' }
+]
+
+const sortOptions = [
+  { value: 'newest', label: 'Newest First' },
+  { value: 'oldest', label: 'Oldest First' },
+  { value: 'rating', label: 'Highest Rating' }
+ ] as const
+
 export default function Dashboard() {
   const [influencers, setInfluencers] = useState<Influencer[]>([])
   const [search, setSearch] = useState('')
   const [platformFilter, setPlatformFilter] = useState<Platform | ''>('')
   const [loading, setLoading] = useState(true)
+  const [showNotifications, setShowNotifications] = useState(false)
+  const [showSortMenu, setShowSortMenu] = useState(false)
+  const [sortOption, setSortOption] = useState<'newest' | 'oldest' | 'rating'>('newest')
   const [insights, setInsights] = useState<DashboardInsights | null>(null)
   const [insightsLoading, setInsightsLoading] = useState(true)
   const [insightsError, setInsightsError] = useState<string | null>(null)
@@ -89,6 +104,27 @@ export default function Dashboard() {
 
   const formatPercent = (value: number) => `${value >= 0 ? '+' : ''}${value.toFixed(1)}%`
 
+  const sortedInfluencers = useMemo(() => {
+    const copy = [...influencers]
+    return copy.sort((a, b) => {
+      if (sortOption === 'newest') {
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      }
+      if (sortOption === 'oldest') {
+        return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+      }
+      if (sortOption === 'rating') {
+        return b.averageRating - a.averageRating
+      }
+      return 0
+    })
+  }, [influencers, sortOption])
+
+  const handleSortSelect = (option: typeof sortOptions[number]['value']) => {
+    setSortOption(option)
+    setShowSortMenu(false)
+  }
+
   return (
     <main className="flex-1 flex flex-col bg-slate-50 dark:bg-[#101522]">
         {/* Top Bar */}
@@ -107,10 +143,38 @@ export default function Dashboard() {
             </div>
           </div>
           <div className="flex items-center gap-4">
-            <button className="p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors relative">
-              <span className="material-symbols-outlined">notifications</span>
-              <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 border-2 border-white dark:border-[#101522] rounded-full"></span>
-            </button>
+            <div className="relative">
+              <button
+                onClick={() => setShowNotifications((prev) => !prev)}
+                className="p-2 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors relative"
+                aria-expanded={showNotifications}
+                aria-label="Abrir notificaciones"
+              >
+                <span className="material-symbols-outlined">notifications</span>
+                <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 border-2 border-white dark:border-[#101522] rounded-full"></span>
+              </button>
+              {showNotifications && (
+                <div className="absolute right-0 mt-2 w-80 rounded-2xl border border-slate-200 bg-white p-4 shadow-lg dark:border-slate-700 dark:bg-slate-900">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-semibold text-slate-900 dark:text-white">Notificaciones</p>
+                    <button
+                      onClick={() => setShowNotifications(false)}
+                      className="text-xs font-semibold uppercase tracking-wider text-slate-500"
+                    >
+                      cerrar
+                    </button>
+                  </div>
+                  <div className="mt-3 space-y-3 text-xs text-slate-500">
+                    {notificationsSeed.map((note) => (
+                      <article key={note.id} className="rounded-xl border border-slate-100 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-900/50">
+                        <p className="font-semibold text-slate-900 dark:text-white">{note.title}</p>
+                        <p className="mt-1 text-slate-500">{note.body}</p>
+                      </article>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
             <div className="h-8 w-px bg-slate-200 dark:bg-slate-800 mx-2"></div>
             <div className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity">
               <div className="text-right">
@@ -259,12 +323,34 @@ export default function Dashboard() {
               </button>
             ))}
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 relative">
               <span className="text-sm text-slate-500 font-medium">Sort by:</span>
-              <button className="flex items-center gap-1 text-sm font-semibold bg-white dark:bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700">
-                Newest First
+              <button
+                onClick={() => setShowSortMenu((prev) => !prev)}
+                className="flex items-center gap-1 text-sm font-semibold bg-white dark:bg-slate-800 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700"
+                aria-haspopup="true"
+                aria-expanded={showSortMenu}
+              >
+                {
+                  sortOptions.find((option) => option.value === sortOption)?.label ?? 'Newest First'
+                }
                 <span className="material-symbols-outlined text-sm">expand_more</span>
               </button>
+              {showSortMenu && (
+                <div className="absolute right-0 top-full mt-2 w-40 rounded-2xl border border-slate-200 bg-white/90 shadow-xl dark:border-slate-700 dark:bg-slate-900/90">
+                  {sortOptions.map((option) => (
+                    <button
+                      key={option.value}
+                      onClick={() => handleSortSelect(option.value as typeof sortOptions[number]['value'])}
+                      className={`w-full px-4 py-2 text-left text-sm font-medium transition hover:bg-slate-100 dark:hover:bg-slate-800 ${
+                        sortOption === option.value ? 'text-[#2b5bee]' : 'text-slate-600 dark:text-slate-300'
+                      }`}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 
@@ -319,7 +405,7 @@ export default function Dashboard() {
             <div className="flex justify-center items-center h-64">
               <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#2b5bee]"></div>
             </div>
-          ) : influencers.length === 0 ? (
+          ) : sortedInfluencers.length === 0 ? (
             <div className="text-center py-16">
               <p className="text-gray-400 text-lg">No creators found</p>
               <Link to="/influencer/new" className="text-[#2b5bee] hover:text-[#1e40af] mt-2 inline-block font-medium">
@@ -328,7 +414,7 @@ export default function Dashboard() {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {influencers.map((influencer) => (
+              {sortedInfluencers.map((influencer) => (
                 <Link
                   key={influencer.id}
                   to={`/influencer/${influencer.id}`}

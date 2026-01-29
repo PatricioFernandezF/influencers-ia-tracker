@@ -6,7 +6,11 @@ interface NavItem {
   path: string
 }
 
-export default function Sidebar() {
+type SidebarProps = {
+  onConnect?: () => void
+}
+
+export default function Sidebar({ onConnect }: SidebarProps) {
   const location = useLocation()
 
   const navItems: NavItem[] = [
@@ -58,7 +62,10 @@ export default function Sidebar() {
           </div>
         </div>
 
-        <button className="w-full bg-blue-500 hover:bg-blue-600 text-white text-sm font-bold py-2.5 rounded-lg transition-colors flex items-center justify-center gap-2">
+        <button
+          onClick={onConnect}
+          className="w-full bg-blue-500 hover:bg-blue-600 text-white text-sm font-bold py-2.5 rounded-lg transition-colors flex items-center justify-center gap-2"
+        >
           <span className="material-symbols-outlined text-lg">add_circle</span>
           Connect Account
         </button>
