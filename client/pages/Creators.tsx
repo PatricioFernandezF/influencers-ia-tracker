@@ -20,6 +20,7 @@ export default function Creators() {
   const [influencers, setInfluencers] = useState<Influencer[]>([])
   const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(true)
+  const [brokenImages, setBrokenImages] = useState<Set<number>>(new Set())
 
   useEffect(() => {
     loadInfluencers()
@@ -51,6 +52,10 @@ export default function Creators() {
     } catch (error) {
       console.error('Error deleting influencer:', error)
     }
+  }
+
+  const handleImageError = (id: number) => {
+    setBrokenImages(prev => new Set(prev).add(id))
   }
 
   const renderStars = (rating: number) => {
@@ -121,8 +126,13 @@ export default function Creators() {
                   <div className="flex items-center gap-4">
                     <div className="size-16 rounded-full p-1 border-2 border-[#2b5bee]/30">
                       <div className="w-full h-full rounded-full bg-center bg-cover overflow-hidden">
-                        {influencer.imageUrl ? (
-                          <img src={influencer.imageUrl} alt={influencer.name} className="w-full h-full object-cover" />
+                        {influencer.imageUrl && !brokenImages.has(influencer.id) ? (
+                          <img 
+                            src={influencer.imageUrl} 
+                            alt={influencer.name} 
+                            className="w-full h-full object-cover"
+                            onError={() => handleImageError(influencer.id)}
+                          />
                         ) : (
                           <div className="w-full h-full bg-gradient-to-br from-[#2b5bee] to-blue-500 flex items-center justify-center text-xl font-bold text-white">
                             {influencer.name.charAt(0).toUpperCase()}
