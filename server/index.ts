@@ -407,6 +407,36 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok' });
 });
 
+// Data cleanup endpoint - fixes concatenated names/descriptions
+app.post('/api/admin/cleanup-data', async (req, res) => {
+  try {
+    const cleanupData = [
+      { id: 3, name: 'DotCSV', description: 'Divulgador de IA y Machine Learning. Análisis y noticias sobre modelos, herramientas y avances en inteligencia artificial.' },
+      { id: 4, name: 'midudev', description: 'Desarrollador y creador de contenido sobre JavaScript, React y herramientas de desarrollo. Comparte noticias sobre IA y desarrollo web.' },
+      { id: 5, name: 'javilop', description: 'Desarrollador de videojuegos y experto en IA. Comparte opiniones sobre el impacto de la IA en la industria tecnológica.' },
+      { id: 6, name: 'Xavier Mitjana', description: 'Experto en tecnología e IA. Comparte análisis y ejemplos sobre nuevas herramientas de inteligencia artificial.' },
+      { id: 7, name: 'Google DeepMind', description: 'División de investigación en IA de Google. Anuncia nuevos modelos Gemini, herramientas y avances en inteligencia artificial.' }
+    ];
+
+    const results = [];
+    for (const item of cleanupData) {
+      const updated = await prisma.influencer.update({
+        where: { id: item.id },
+        data: {
+          name: item.name,
+          description: item.description
+        }
+      });
+      results.push({ id: item.id, name: item.name, status: 'updated' });
+    }
+
+    res.json({ message: 'Data cleanup completed', updated: results });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Error during data cleanup' });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
