@@ -17,6 +17,7 @@ export default function Sidebar({ onConnect }: SidebarProps) {
     { icon: 'dashboard', label: 'Dashboard', path: '/' },
     { icon: 'analytics', label: 'Analytics', path: '/analytics' },
     { icon: 'group', label: 'Creators', path: '/creators' },
+    { icon: 'newspaper', label: 'Newsletter', path: '/newsletter' },
     { icon: 'settings', label: 'Settings', path: '/settings' },
   ]
 

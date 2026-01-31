@@ -92,5 +92,10 @@ export const api = {
   async getDashboardInsights() {
     const res = await fetch(`${API_URL}/api/dashboard-insights`)
     return res.json()
+  },
+
+  async getNewsletter() {
+    const res = await fetch(`${API_URL}/api/newsletter`)
+    return res.json()
   }
 }

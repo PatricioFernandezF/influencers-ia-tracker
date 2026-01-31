@@ -33,6 +33,7 @@ app.get('/api/influencers', async (req, res) => {
     
     const influencers = await prisma.influencer.findMany({
       where,
+      distinct: ['id'],
       include: {
         socialNetworks: {
           include: {

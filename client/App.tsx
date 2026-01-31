@@ -4,6 +4,7 @@ import Dashboard from './pages/Dashboard'
 import InfluencerDetail from './pages/InfluencerDetail'
 import InfluencerForm from './pages/InfluencerForm'
 import Creators from './pages/Creators'
+import Newsletter from './pages/Newsletter'
 import Sidebar from './components/Sidebar'
 import ConnectAccountModal from './components/ConnectAccountModal'
 
@@ -17,6 +18,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/creators" element={<Creators />} />
+          <Route path="/newsletter" element={<Newsletter />} />
           <Route path="/influencer/:id" element={<InfluencerDetail />} />
           <Route path="/influencer/new" element={<InfluencerForm />} />
           <Route path="/influencer/:id/edit" element={<InfluencerForm />} />
