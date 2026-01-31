@@ -437,6 +437,52 @@ app.post('/api/admin/cleanup-data', async (req, res) => {
   }
 });
 
+// Newsletter endpoint
+app.get('/api/newsletter', async (req, res) => {
+  try {
+    const influencers = await prisma.influencer.findMany({
+      include: {
+        socialNetworks: {
+          include: {
+            posts: true
+          }
+        },
+        ratings: true
+      }
+    });
+
+    // Calcular posts totales por influencer
+    const influencersWithStats = influencers.map(inf => {
+      const totalPosts = inf.socialNetworks.reduce((sum, sn) => sum + sn.posts.length, 0);
+      const avgRating = inf.ratings.length > 0 
+        ? inf.ratings.reduce((sum, r) => sum + r.score, 0) / inf.ratings.length 
+        : 0;
+      
+      return {
+        ...inf,
+        totalPosts,
+        avgRating
+      };
+    });
+
+    // Ordenar por posts
+    const topInfluencers = influencersWithStats
+      .filter(inf => inf.totalPosts > 0)
+      .sort((a, b) => b.totalPosts - a.totalPosts);
+
+    res.json({
+      title: "Influencers IA Tracker - Newsletter",
+      generatedAt: new Date().toISOString(),
+      topInfluencers: topInfluencers.slice(0, 10),
+      totalInfluencers: influencers.length,
+      totalPosts: topInfluencers.reduce((sum, inf) => sum + inf.totalPosts, 0)
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Error generating newsletter' });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
